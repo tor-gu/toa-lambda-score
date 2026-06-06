@@ -13,7 +13,10 @@ def _get_params(payload: dict) -> tuple[float, float]:
         print("error: missing 'sd' (payload field or SD env var)", file=sys.stderr)
         sys.exit(1)
     if raw_uwp is None:
-        print("error: missing 'unit_win_prob' (payload field or UNIT_WIN_PROB env var)", file=sys.stderr)
+        print(
+            "error: missing 'unit_win_prob' (payload field or UNIT_WIN_PROB env var)",
+            file=sys.stderr,
+        )
         sys.exit(1)
     return float(raw_sd), float(raw_uwp)
 

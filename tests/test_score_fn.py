@@ -1,4 +1,3 @@
-import pytest
 from score.score_fn import score
 
 RESULTS = [

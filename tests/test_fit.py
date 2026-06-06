@@ -1,9 +1,11 @@
-from pytest import fixture
-import pytest
-import pandas as pd
+from math import exp, log
+
 import numpy as np
+import pandas as pd
+import pytest
+from pytest import fixture
+
 from score.fit import make_of, set_up_params
-from math import log, exp
 
 
 @fixture
@@ -67,7 +69,7 @@ def test_make_of_2(results_2, sd, offset):
 @pytest.mark.parametrize("scale", [1.0, 2.0])
 @pytest.mark.parametrize("sd", [0.5, 1.0, 2.0])
 def test_make_of_3(results_1, sd, scale):
-    """ "Test the round-robin tournament with values (3,2,1) and various sds and scales"""
+    """Test round-robin tournament with values (3,2,1) and various sds and scales."""
     of = make_of(3, results_1, sd=sd, scale=scale)
     actual = of([3, 2, 1])
     # For this tournament, with value [3,2,1], the of reduces to...
@@ -83,10 +85,11 @@ def test_make_of_3(results_1, sd, scale):
     )
     np.testing.assert_approx_equal(expected, actual)
 
+
 @pytest.mark.parametrize("scale", [1.0, 2.0])
 @pytest.mark.parametrize("sd", [0.5, 1.0, 2.0])
 def test_make_of_4(results_2, sd, scale):
-    """ "Test the total-order tournament with values (3,2,1) and various sds and scales"""
+    """Test total-order tournament with values (3,2,1) and various sds and scales."""
     of = make_of(3, results_2, sd=sd, scale=scale)
     actual = of([3, 2, 1])
     # For this tournament, with value [3,2,1], the of reduces to...

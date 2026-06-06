@@ -3,9 +3,9 @@ from math import log
 import numpy as np
 import pandas as pd
 
+from .consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
 from .fit import fit_of, make_of
 from .robustness import calculate_robustness
-from .consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
 
 
 def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
@@ -14,7 +14,9 @@ def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
     returns: list of {"id": str, "score": float, "robustness": float}
     """
     results_df = pd.DataFrame(results)
-    players = list(set(results_df[RESULT_COLUMN.WINNER]) | set(results_df[RESULT_COLUMN.LOSER]))
+    players = list(
+        set(results_df[RESULT_COLUMN.WINNER]) | set(results_df[RESULT_COLUMN.LOSER])
+    )
     player_ids = {player: idx for idx, player in enumerate(players)}
 
     fit_df = results_df.copy()
@@ -27,10 +29,14 @@ def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
     res = fit_of(of, np.zeros(n))
 
     id_by_idx = {v: k for k, v in player_ids.items()}
-    scores_df = pd.DataFrame({
-        COLUMN.ID: [id_by_idx[i] for i in range(n)],
-        FIT_COLUMN.SCORE: res.x.round(3),
-    })
+    scores_df = pd.DataFrame(
+        {
+            COLUMN.ID: [id_by_idx[i] for i in range(n)],
+            FIT_COLUMN.SCORE: res.x.round(3),
+        }
+    )
     scores_df = calculate_robustness(fit_df, scores_df, lmda=scale)
 
-    return scores_df[[COLUMN.ID, FIT_COLUMN.SCORE, FIT_COLUMN.ROBUSTNESS]].to_dict(orient="records")
+    return scores_df[[COLUMN.ID, FIT_COLUMN.SCORE, FIT_COLUMN.ROBUSTNESS]].to_dict(
+        orient="records"
+    )
