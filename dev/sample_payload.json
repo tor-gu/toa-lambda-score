@@ -1,0 +1,9 @@
+{
+  "sd": 0.622,
+  "unit_win_prob": 0.9,
+  "results": [
+    {"winner": "a", "loser": "b", "match_id": "1"},
+    {"winner": "b", "loser": "c", "match_id": "2"},
+    {"winner": "a", "loser": "c", "match_id": "3"}
+  ]
+}
