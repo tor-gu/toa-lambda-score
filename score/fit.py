@@ -70,7 +70,7 @@ def make_of(player_count, results, column_names=(FIT_COLUMN.WINNER_ID, FIT_COLUM
 
 
 def fit_of(of, initial_strengths, maxiter=1000):
-    constraint = LinearConstraint(np.ones((1, len(initial_strengths))), [0], [0])
+    constraint = LinearConstraint(np.ones((1, len(initial_strengths))), 0, 0)
     res = minimize(
         lambda x: -of(x),
         x0=initial_strengths,
