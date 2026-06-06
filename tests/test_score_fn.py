@@ -1,5 +1,5 @@
 import pytest
-from score_fn import score
+from score.score_fn import score
 
 RESULTS = [
     {"winner": "a", "loser": "b", "match_id": "1"},

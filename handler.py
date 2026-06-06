@@ -1,7 +1,7 @@
 import json
 import os
 
-from score_fn import score
+from score.score_fn import score
 
 
 def _get_params(body: dict) -> tuple[float, float]:

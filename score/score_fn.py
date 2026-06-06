@@ -3,9 +3,9 @@ from math import log
 import numpy as np
 import pandas as pd
 
-from score.fit import fit_of, make_of
-from score.robustness import calculate_robustness
-from util.consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
+from .fit import fit_of, make_of
+from .robustness import calculate_robustness
+from .consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
 
 
 def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:

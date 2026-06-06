@@ -3,7 +3,7 @@ import os
 import sys
 from pathlib import Path
 
-from score_fn import score
+from score.score_fn import score
 
 
 def _get_params(payload: dict) -> tuple[float, float]:

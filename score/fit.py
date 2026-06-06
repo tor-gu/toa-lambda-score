@@ -3,7 +3,7 @@ from math import exp, log
 import numpy as np
 from scipy.optimize import LinearConstraint, minimize
 
-from util.consts import FIT_COLUMN
+from .consts import FIT_COLUMN
 
 def set_up_params(player_count, results, column_names=(FIT_COLUMN.WINNER_ID, FIT_COLUMN.LOSER_ID)):
     """

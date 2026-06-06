@@ -1,6 +1,6 @@
 import numpy as np
 
-from util.consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
+from .consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
 
 # Column names for our internal calculations
 ROBUSTNESS_CONTRIBUTION = "robustness_contribution"
