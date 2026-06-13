@@ -1,7 +1,12 @@
 import json
 import os
+import time
+
+from toa.logging import Domain, get_logger
 
 from score.score_fn import score
+
+logger = get_logger(name="score", domain=Domain.SCORING_PIPELINE)
 
 
 def _get_params(body: dict) -> tuple[float, float]:
@@ -31,6 +36,7 @@ def handler(event, context):
 
     results = body.get("results")
     if results is None:
+        logger.warning("missing results field in payload")
         return {
             "statusCode": 400,
             "body": json.dumps({"error": "payload must include 'results' array"}),
@@ -39,9 +45,19 @@ def handler(event, context):
     try:
         sd, unit_win_prob = _get_params(body)
     except ValueError as e:
+        logger.warning("missing scoring parameters", extra={"error": str(e)})
         return {"statusCode": 400, "body": json.dumps({"error": str(e)})}
 
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"scores": score(results, sd, unit_win_prob)}),
-    }
+    t0 = time.monotonic()
+    logger.info("handler started", extra={"num_results": len(results)})
+    try:
+        scores = score(results, sd, unit_win_prob)
+        duration_ms = round((time.monotonic() - t0) * 1000)
+        logger.info("scoring complete", extra={"num_scores": len(scores), "duration_ms": duration_ms})
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"scores": scores}),
+        }
+    except Exception:
+        logger.exception("handler error", extra={"duration_ms": round((time.monotonic() - t0) * 1000)})
+        raise
