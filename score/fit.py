@@ -63,7 +63,9 @@ def make_of(
     will maximize to find the best fit strengths.
 
     The function is defined as:
-    of(x) = -sum(x_i^2) / (2 * sd) + sum(wi * x_i) - sum(gij * log(exp(x_i) + exp(x_j)))
+    of(x) = -sum(x_i^2) / (2 * sd^2)
+            + sum(wi * x_i)
+            - sum(gij * log(exp(x_i) + exp(x_j)))
 
     where:
     - x_i is the strength of player i
@@ -72,11 +74,11 @@ def make_of(
     """
 
     wins, games = set_up_params(player_count, results, column_names)
-    sd2 = 2 * sd
+    two_variance = 2 * sd**2
 
     def of(x: list[float]) -> float:
         return (
-            -sum(np.array(x) ** 2) / sd2
+            -sum(np.array(x) ** 2) / two_variance
             + scale * sum(wi * x[i] for i, wi in wins.items())
             - sum(
                 gij * log(exp(scale * x[i]) + exp(scale * x[j]))

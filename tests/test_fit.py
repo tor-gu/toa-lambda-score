@@ -51,7 +51,7 @@ def test_make_of_1(results_1, sd, offset):
     of = make_of(3, results_1, sd=sd)
     actual = of([offset] * 3)
     # For this tournament, if x = [offset] * 3, the of reduces to...
-    expected = -3 * (offset**2 / (2 * sd) + log(2))
+    expected = -3 * (offset**2 / (2 * sd**2) + log(2))
     np.testing.assert_approx_equal(expected, actual)
 
 
@@ -62,7 +62,7 @@ def test_make_of_2(results_2, sd, offset):
     of = make_of(3, results_2, sd=sd)
     actual = of([offset] * 3)
     # For this tournament, if x = [offset] * 3, the of reduces to...
-    expected = -3 * (offset**2 / (2 * sd) + log(2))
+    expected = -3 * (offset**2 / (2 * sd**2) + log(2))
     np.testing.assert_approx_equal(expected, actual)
 
 
@@ -77,7 +77,7 @@ def test_make_of_3(results_1, sd, scale):
     w1 = 1  # 1 win
     w2 = 1  # 1 win
     expected = (
-        -7 / sd
+        -7 / sd**2
         + scale * (3 * w0 + 2 * w1 + 1 * w2)
         - log(exp(3 * scale) + exp(2 * scale))
         - log(exp(3 * scale) + exp(1 * scale))
@@ -97,7 +97,7 @@ def test_make_of_4(results_2, sd, scale):
     w1 = 1  # 1 win
     w2 = 0  # 0 win
     expected = (
-        -7 / sd
+        -7 / sd**2
         + scale * (3 * w0 + 2 * w1 + 1 * w2)
         - log(exp(3 * scale) + exp(2 * scale))
         - log(exp(3 * scale) + exp(1 * scale))
