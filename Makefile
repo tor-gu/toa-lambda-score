@@ -10,6 +10,6 @@ lint:
 	flake8 .
 
 test:
-	pytest tests/
+	pytest
 
 check: lint test
