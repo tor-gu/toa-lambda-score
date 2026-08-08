@@ -53,11 +53,17 @@ def handler(event, context):
     try:
         scores = score(results, sd, unit_win_prob)
         duration_ms = round((time.monotonic() - t0) * 1000)
-        logger.info("scoring complete", extra={"num_scores": len(scores), "duration_ms": duration_ms})
+        logger.info(
+            "scoring complete",
+            extra={"num_scores": len(scores), "duration_ms": duration_ms},
+        )
         return {
             "statusCode": 200,
             "body": json.dumps({"scores": scores}),
         }
     except Exception:
-        logger.exception("handler error", extra={"duration_ms": round((time.monotonic() - t0) * 1000)})
+        logger.exception(
+            "handler error",
+            extra={"duration_ms": round((time.monotonic() - t0) * 1000)},
+        )
         raise
