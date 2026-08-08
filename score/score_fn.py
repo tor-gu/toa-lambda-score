@@ -14,8 +14,10 @@ def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
     returns: list of {"id": str, "score": float, "robustness": float}
     """
     results_df = pd.DataFrame(results)
-    players = list(
-        set(results_df[RESULT_COLUMN.WINNER]) | set(results_df[RESULT_COLUMN.LOSER])
+    players = sorted(
+        list(
+            set(results_df[RESULT_COLUMN.WINNER]) | set(results_df[RESULT_COLUMN.LOSER])
+        )
     )
     player_ids = {player: idx for idx, player in enumerate(players)}
 
