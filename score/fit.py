@@ -118,7 +118,7 @@ def make_of(
     scale: float = 1.0,
 ) -> Callable[[npt.ArrayLike], float]:
     """
-    The objective function for a modified version of the Bradley-Terry model, which we
+    The objective function for a regularized Bradley-Terry model, which we
     will maximize to find the best fit strengths.
 
     The function is defined as:
@@ -156,6 +156,14 @@ def fit_of(
     initial_strengths: np.ndarray,
     maxiter: int = 1000,
 ) -> OptimizeResult:
+    """
+    Maximize the objective function.
+
+    We add a constraint to force the scores to sum to 0. The true
+    maximum will have this feature automatically. 
+
+    We negate the function and use minimize.
+    """
     constraint = LinearConstraint(np.ones((1, len(initial_strengths))), 0, 0)
     res = minimize(
         lambda x: -of(x),
