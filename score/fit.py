@@ -1,14 +1,72 @@
-from math import exp, log
+from collections.abc import Callable
 
 import numpy as np
-from scipy.optimize import LinearConstraint, minimize
+import numpy.typing as npt
+import pandas as pd
+from scipy.optimize import LinearConstraint, OptimizeResult, minimize
 
 from .consts import FIT_COLUMN
 
 
+def _winner_loser_arrays(
+    results: pd.DataFrame, column_names: tuple[str, str]
+) -> tuple[np.ndarray, np.ndarray]:
+    """Extract the winner and loser id columns as integer numpy arrays."""
+    winner, loser = column_names
+    return (
+        results[winner].to_numpy(dtype=np.intp),
+        results[loser].to_numpy(dtype=np.intp),
+    )
+
+
+def _wins_by_player(player_count: int, winners: np.ndarray) -> np.ndarray:
+    """Players are assumed to have ids from 0 to player_count-1.
+    Calculate the wins for each player as a numpy array."""
+    return np.bincount(winners, minlength=player_count)
+
+
+def _games_by_matchup(
+    player_count: int, winners: np.ndarray, losers: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """We're going to calculate games per matchup and return the results
+    as three arrays, which look like this (in tabular format):
+
+        | lo_id | hi_id | games |
+        | ----- | ----- | ----- |
+        | 0     | 1     | 2     |
+        | 0     | 2     | 1     |
+        | 0     | 4     | 1     |
+        | ...   | ...   | ...   |
+
+    We will always have lo_id < hi_id (assuming that there are no 'self-matches')
+    and games > 0 (because we omit matchups with no games).
+
+    The calculation is a little slick, to take advantage of using np.unique
+    to return a histogram:  We'll encode the id pairs (a,b) as a*N + b,
+    where N is the player_count. (And then we'll decode them with
+    arithmetic modulo N).
+
+    The encoding is safe as long as player_count < sqrt(MAX_INT64).
+    """
+
+    # Convert from winners and losers to lo_id and hi_id
+    lo, hi = np.minimum(winners, losers), np.maximum(winners, losers)
+
+    # Encode (a,b) as a*N + b
+    encoded_matchups = lo * player_count + hi
+
+    # Calculate the histogram
+    keys, pair_games = np.unique(encoded_matchups, return_counts=True)
+
+    # Decode and return
+    return keys // player_count, keys % player_count, pair_games
+
+
 def set_up_params(
-    player_count, results, column_names=(FIT_COLUMN.WINNER_ID, FIT_COLUMN.LOSER_ID)
-):
+    player_count: int,
+    results: pd.DataFrame,
+    column_names: tuple[str, str] = (FIT_COLUMN.WINNER_ID, FIT_COLUMN.LOSER_ID),
+) -> tuple[dict[int, int], dict[tuple[int, int], int]]:
     """
     Given a a dataframe of tournement results, calculate the number of wins
     for each player and the number of games played between each pair of players.
@@ -25,39 +83,40 @@ def set_up_params(
 
     Returns:
         A tuple of two dictionaries:
-        - wins_by_team: A dictionary mapping player id to total wins.
+        - wins_by_player: A dictionary mapping player id to total wins.
         - games_by_matchup: A dictionary mapping (i, j) to total games played between
             player i and player j (with i < j).
-        Players with zero wins or zero games are excluded from the respective
-        dictionaries.
+        Players with zero wins and matchups with zero games are excluded
+        from the respective dictionaries.
 
     """
-    N = player_count
-    winner, loser = column_names
-    wins_by_matchup = {(i, j): 0 for i in range(N) for j in range(N) if i != j}
-    for _, row in results.iterrows():
-        a, b = row[winner], row[loser]
-        wins_by_matchup[(a, b)] += 1
-    wins_by_player = {
-        i: sum(wins_by_matchup[(i, j)] for j in range(N) if i != j) for i in range(N)
-    }
-    wins_by_player = {key: val for key, val in wins_by_player.items() if val != 0}
+    # Extract the numpy arrays
+    winners, losers = _winner_loser_arrays(results, column_names)
+
+    # Get wins per player
+    wins = _wins_by_player(player_count, winners)
+
+    # Get games per matchup
+    low_ids, hi_ids, pair_games = _games_by_matchup(player_count, winners, losers)
+
+    # Now convert back to dicts. We use int() so callers see plain Python 
+    # ints rather than numpy scalars.
+    wins_by_player = {int(i): int(v) for i, v in enumerate(wins) if v != 0}
     games_by_matchup = {
-        (i, j): wins_by_matchup[(i, j)] + wins_by_matchup[(j, i)]
-        for i in range(N)
-        for j in range(i + 1, N)
+        (int(i), int(j)): int(g) for i, j, g in zip(low_ids, hi_ids, pair_games)
     }
-    games_by_matchup = {key: val for key, val in games_by_matchup.items() if val != 0}
+
+    # Done
     return wins_by_player, games_by_matchup
 
 
 def make_of(
-    player_count,
-    results,
-    column_names=(FIT_COLUMN.WINNER_ID, FIT_COLUMN.LOSER_ID),
-    sd=1.0,
-    scale=1.0,
-):
+    player_count: int,
+    results: pd.DataFrame,
+    column_names: tuple[str, str] = (FIT_COLUMN.WINNER_ID, FIT_COLUMN.LOSER_ID),
+    sd: float = 1.0,
+    scale: float = 1.0,
+) -> Callable[[npt.ArrayLike], float]:
     """
     The objective function for a modified version of the Bradley-Terry model, which we
     will maximize to find the best fit strengths.
@@ -73,23 +132,30 @@ def make_of(
     - gij is the total games played between player i and player j
     """
 
-    wins, games = set_up_params(player_count, results, column_names)
+    winners, losers = _winner_loser_arrays(results, column_names)
+    wins = _wins_by_player(player_count, winners).astype(float)
+    pair_i, pair_j, pair_games = _games_by_matchup(player_count, winners, losers)
+    pair_games = pair_games.astype(float)
     two_variance = 2 * sd**2
 
-    def of(x: list[float]) -> float:
+    def of(x: npt.ArrayLike) -> float:
+        xa = np.asarray(x, dtype=float)
+        sx = scale * xa
+        # logaddexp(a, b) is log(exp(a) + exp(b)) without the overflow.
         return (
-            -sum(np.array(x) ** 2) / two_variance
-            + scale * sum(wi * x[i] for i, wi in wins.items())
-            - sum(
-                gij * log(exp(scale * x[i]) + exp(scale * x[j]))
-                for (i, j), gij in games.items()
-            )
+            -np.dot(xa, xa) / two_variance
+            + scale * np.dot(wins, xa)
+            - np.dot(pair_games, np.logaddexp(sx[pair_i], sx[pair_j]))
         )
 
     return of
 
 
-def fit_of(of, initial_strengths, maxiter=1000):
+def fit_of(
+    of: Callable[[npt.ArrayLike], float],
+    initial_strengths: np.ndarray,
+    maxiter: int = 1000,
+) -> OptimizeResult:
     constraint = LinearConstraint(np.ones((1, len(initial_strengths))), 0, 0)
     res = minimize(
         lambda x: -of(x),

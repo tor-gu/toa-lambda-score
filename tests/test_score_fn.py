@@ -31,3 +31,10 @@ def test_dominant_player_scores_highest():
 def test_robustness_is_non_negative():
     result = score(RESULTS, SD, UWP)
     assert all(r["robustness"] >= 0 for r in result)
+
+
+def test_scores_are_stable():
+    """Golden values, so a change to the fit has something to fail against."""
+    result = score(RESULTS, SD, UWP)
+    actual = {r["id"]: round(r["score"], 3) for r in result}
+    assert actual == {"a": 0.484, "b": -0.089, "c": -0.395}
