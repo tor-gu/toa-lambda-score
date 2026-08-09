@@ -100,7 +100,7 @@ $$\log L(\mathbf{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k
 
 To maximize $L$, we can ignore $D$ and combine terms in $\log L$ to obtain an objective function
 
-$$of(\mathbf{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i<j \leq n} m_{i,j} \log(e^{\lambda x_i}+e^{\lambda x_j})$$
+$$of(\mathbf{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i \lt j \leq n} m_{i,j} \log(e^{\lambda x_i}+e^{\lambda x_j})$$
 
 where $w_i$ is the number of wins by $P_i$ and $m_{i,j}$ is the number of matches between $P_i$ and $P_j$.
 
