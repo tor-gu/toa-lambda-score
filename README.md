@@ -75,13 +75,13 @@ The underlying assumptions are:
 
 1. Scores are distributed normally about $0$:
 
-   $$f(\mathbf{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}})$$
+      $$f(\mathbf{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}})$$
 
-   This is the prior distribution in the MAP estimate.
+    This is the prior distribution in the MAP estimate.
 
 2. Given two players, $P$ and $Q$ with scores $x$ and $y$, the probability that $P$ defeats $Q$ in a match is:
 
-   $$B(x,y;\lambda) = \frac{e^{\lambda x}}{e^{\lambda x}+e^{\lambda y}}$$
+      $$B(x,y;\lambda) = \frac{e^{\lambda x}}{e^{\lambda x}+e^{\lambda y}}$$
 
    This is the Bradley-Terry model.
 
