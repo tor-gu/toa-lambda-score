@@ -73,22 +73,35 @@ Players $P_1, P_2, ...$ have participated in a tournament with a series of head-
 
 The underlying assumptions are:
 
-1. Scores are distributed normally about $0$: $$f(\mathbf{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}}) $$This is the prior distribution in the MAP estimate.
-2. Given two players, $P$ and $Q$ with scores $x$ and $y$, the probability that $P$ defeats $Q$ in a match is: $$B(x,y;\lambda) = \frac{e^{\lambda x}}{e^{\lambda x}+e^{\lambda y}}$$ This is the Bradley-Terry model.
+1. Scores are distributed normally about $0$:
+
+   $$f(\mathbf{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}})$$
+
+   This is the prior distribution in the MAP estimate.
+
+2. Given two players, $P$ and $Q$ with scores $x$ and $y$, the probability that $P$ defeats $Q$ in a match is:
+
+   $$B(x,y;\lambda) = \frac{e^{\lambda x}}{e^{\lambda x}+e^{\lambda y}}$$
+
+   This is the Bradley-Terry model.
 
 We assume that the scaling parameters $\sigma$ and $\lambda$ are given to us in advance.
 
 ### The objective function
-Suppose there are $n$ players and $m$ matches, with winners $P_{i_1}, \ldots, P_{i_m}$ and losers $P_{j_1}, \ldots, P_{j_m}$. 
+Suppose there are $n$ players and $m$ matches, with winners $P_{i_1}, \ldots, P_{i_m}$ and losers $P_{j_1}, \ldots, P_{j_m}$.
 
-We want to find the score values $\mathbf{x}=x_1,...,x_n$ that maximize the regularized likelihood function $$L(\mathbf{x}) = f(\mathbf{x}) \cdot \prod_{k=1}^{m} B(x_{i_k},x_{j_k})$$ 
+We want to find the score values $\mathbf{x}=x_1,...,x_n$ that maximize the regularized likelihood function
 
-The log-likelihood then is 
+$$L(\mathbf{x}) = f(\mathbf{x}) \cdot \prod_{k=1}^{m} B(x_{i_k},x_{j_k})$$
 
-$$ \log L(\mathbf{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k=1}^m x_{i_k} - \sum_{k=1}^m\log(e^{\lambda x_{i_k}} + e^{\lambda x_{j_k}}) + D$$
+The log-likelihood then is
+
+$$\log L(\mathbf{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k=1}^m x_{i_k} - \sum_{k=1}^m\log(e^{\lambda x_{i_k}} + e^{\lambda x_{j_k}}) + D$$
 
 To maximize $L$, we can ignore $D$ and combine terms in $\log L$ to obtain an objective function
+
 $$of(\mathbf{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i<j \leq n} m_{i,j} \log(e^{\lambda x_i}+e^{\lambda x_j})$$
+
 where $w_i$ is the number of wins by $P_i$ and $m_{i,j}$ is the number of matches between $P_i$ and $P_j$.
 
 The value of $\hat{\mathbf{x}} = \hat{x}_1,\ldots,\hat{x}_n$ that maximizes the objective function $of(\mathbf{x})$ is our scoring estimate.
@@ -99,21 +112,28 @@ There are two scaling parameters in the objective function, $of(\mathbf{x};\sigm
 $\sigma$ is the standard deviation of the normal distribution, our prior distribution for the MAP estimate. It is passed to us directly.
 
 $\lambda$ is the scaling parameter for the Bradley-Terry model. This is computed from $p$, the _unit win probability_. Given a match between two players whose score differ by exactly 1, we require the chance that the stronger player wins is $p$. We can compute $\lambda$ from $p$ by
+
 $$\lambda = \log(\frac{p}{1-p})$$
 
 ### Robustness
-We also compute the _robustness_ of each player's score $\hat{x}_i$: $$r_i = 4 \sum_k B(\hat{x}_i,\hat{x}_{o_k})\cdot B(\hat{x}_{o_k},\hat{x}_i)$$
-where the sum is taken over all matches that $P_i$ participated in, and $P_{o_k}$ is the opponent $P_i$ faced in match $M_k$.  
+We also compute the _robustness_ of each player's score $\hat{x}_i$:
+
+$$r_i = 4 \sum_k B(\hat{x}_i,\hat{x}_{o_k})\cdot B(\hat{x}_{o_k},\hat{x}_i)$$
+
+where the sum is taken over all matches that $P_i$ participated in, and $P_{o_k}$ is the opponent $P_i$ faced in match $M_k$.
 
 The robustness is related to the second partial derivative of the log-likelihood function:
+
 $$\frac{\partial^2 \log(L)}{\partial x_i^2} =  -\frac{1}{\sigma^2} - \frac{\lambda^2 r_i}{4}$$
 
 We choose the scaling factor of $4$ so that a "perfect match" (that is, a match between players whose score estimates are equal) contributes exactly $1$ to the robustness score of each player.
 
 ### Linear constraint
-We use the [scipy optimize](https://docs.scipy.org/doc/scipy/reference/optimize.html) package to maximize the objective function. 
+We use the [scipy optimize](https://docs.scipy.org/doc/scipy/reference/optimize.html) package to maximize the objective function.
 
-The actual maximum of the objective function will satisfy $$\sum_{i=1}^n x_i = 0$$
+The actual maximum of the objective function will satisfy
+
+$$\sum_{i=1}^n x_i = 0$$
 
 However, the estimate of the maximum returned by the numerical package is not guaranteed to satisfy it, so we add it as a [constraint](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.LinearConstraint.html#scipy.optimize.LinearConstraint).
 
