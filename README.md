@@ -73,7 +73,7 @@ Players $P_1, P_2, ...$ have participated in a tournament with a series of head-
 
 The underlying assumptions are:
 
-1. Scores are distributed normally about $0$: $$f(\bold{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}}) $$This is the prior distribution in the MAP estimate.
+1. Scores are distributed normally about $0$: $$f(\mathbf{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}}) $$This is the prior distribution in the MAP estimate.
 2. Given two players, $P$ and $Q$ with scores $x$ and $y$, the probability that $P$ defeats $Q$ in a match is: $$B(x,y;\lambda) = \frac{e^{\lambda x}}{e^{\lambda x}+e^{\lambda y}}$$ This is the Bradley-Terry model.
 
 We assume that the scaling parameters $\sigma$ and $\lambda$ are given to us in advance.
@@ -81,20 +81,20 @@ We assume that the scaling parameters $\sigma$ and $\lambda$ are given to us in 
 ### The objective function
 Suppose there are $n$ players and $m$ matches, with winners $P_{i_1}, \ldots, P_{i_m}$ and losers $P_{j_1}, \ldots, P_{j_m}$. 
 
-We want to find the score values $\bold{x}=x_1,...,x_n$ that maximize the regularized likelihood function $$L(\bold{x}) = f(\bold{x}) \cdot \prod_{k=1}^{m} B(x_{i_k},x_{j_k})$$ 
+We want to find the score values $\mathbf{x}=x_1,...,x_n$ that maximize the regularized likelihood function $$L(\mathbf{x}) = f(\mathbf{x}) \cdot \prod_{k=1}^{m} B(x_{i_k},x_{j_k})$$ 
 
 The log-likelihood then is 
 
-$$ \log L(\bold{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k=1}^m x_{i_k} - \sum_{k=1}^m\log(e^{\lambda x_{i_k}} + e^{\lambda x_{j_k}}) + D$$
+$$ \log L(\mathbf{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k=1}^m x_{i_k} - \sum_{k=1}^m\log(e^{\lambda x_{i_k}} + e^{\lambda x_{j_k}}) + D$$
 
 To maximize $L$, we can ignore $D$ and combine terms in $\log L$ to obtain an objective function
-$$of(\bold{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i<j \leq n} m_{i,j} \log(e^{\lambda x_i}+e^{\lambda x_j})$$
+$$of(\mathbf{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i<j \leq n} m_{i,j} \log(e^{\lambda x_i}+e^{\lambda x_j})$$
 where $w_i$ is the number of wins by $P_i$ and $m_{i,j}$ is the number of matches between $P_i$ and $P_j$.
 
-The value of $\hat{\bold{x}} = \hat{x}_1,\ldots,\hat{x}_n$ that maximizes the objective function $of(\bold{x})$ is our scoring estimate.
+The value of $\hat{\mathbf{x}} = \hat{x}_1,\ldots,\hat{x}_n$ that maximizes the objective function $of(\mathbf{x})$ is our scoring estimate.
 
 ### The scaling parameters
-There are two scaling parameters in the objective function, $of(\bold{x};\sigma,\lambda)$:
+There are two scaling parameters in the objective function, $of(\mathbf{x};\sigma,\lambda)$:
 
 $\sigma$ is the standard deviation of the normal distribution, our prior distribution for the MAP estimate. It is passed to us directly.
 
