@@ -75,7 +75,7 @@ The underlying assumptions are:
 
 1. Scores are distributed normally about $0$:
 
-      $$f(\mathbf{x};\sigma)=C \cdot exp \left(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}} \right)$$
+      $$f(\mathbf{x};\sigma)=C \cdot \exp\left(-\frac{\sum_{i=1}^n x_i^2}{2\sigma^2}\right)$$
 
     This is the prior distribution in the MAP estimate.
 
@@ -92,22 +92,22 @@ Suppose there are $n$ players and $m$ matches, with winners $P_{i_1}, \ldots, P_
 
 We want to find the score values $\mathbf{x}=x_1,...,x_n$ that maximize the regularized likelihood function
 
-$$L(\mathbf{x}) = f(\mathbf{x}) \cdot \prod_{k=1}^{m} B(x_{i_k},x_{j_k})$$
+$$L(\mathbf{x}) = f(\mathbf{x}) \cdot \prod_{k=1}^{m} B\left(x_{i_k},x_{j_k}\right)$$
 
 The log-likelihood then is
 
-$$\log L(\mathbf{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k=1}^m x_{i_k} - \sum_{k=1}^m\log(e^{\lambda x_{i_k}} + e^{\lambda x_{j_k}}) + D$$
+$$\log L(\mathbf{x}) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{k=1}^m x_{i_k} - \sum_{k=1}^m\log\left(e^{\lambda x_{i_k}} + e^{\lambda x_{j_k}}\right) + D$$
 
 To maximize $L$, we can ignore $D$ and combine terms in $\log L$ to obtain an objective function
 
-$$of(\mathbf{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i \lt j \leq n} m_{i,j} \log(e^{\lambda x_i}+e^{\lambda x_j})$$
+$$\mathrm{of}(\mathbf{x};\sigma,\lambda) = -\frac{1}{2\sigma^2} \sum_{i=1}^n x_i^2 + \lambda \sum_{i=1}^nw_i x_i - \sum_{1\leq i \lt j \leq n} m_{i,j} \log\left(e^{\lambda x_i}+e^{\lambda x_j}\right)$$
 
 where $w_i$ is the number of wins by $P_i$ and $m_{i,j}$ is the number of matches between $P_i$ and $P_j$.
 
-The value of $\hat{\mathbf{x}} = \hat{x}_1,\ldots,\hat{x}_n$ that maximizes the objective function $of(\mathbf{x})$ is our scoring estimate.
+The value of $\hat{\mathbf{x}} = \hat{x}_1,\ldots,\hat{x}_n$ that maximizes the objective function $\mathrm{of}(\mathbf{x})$ is our scoring estimate.
 
 ### The scaling parameters
-There are two scaling parameters in the objective function, $of(\mathbf{x};\sigma,\lambda)$:
+There are two scaling parameters in the objective function, $\mathrm{of}(\mathbf{x};\sigma,\lambda)$:
 
 $\sigma$ is the standard deviation of the normal distribution, our prior distribution for the MAP estimate. It is passed to us directly.
 
@@ -118,7 +118,7 @@ $$\lambda = \log \left(\frac{p}{1-p}\right)$$
 ### Robustness
 We also compute the _robustness_ of each player's score $\hat{x}_i$:
 
-$$r_i = 4 \sum_k B(\hat{x}_i,\hat{x}_{o_k})\cdot B(\hat{x}_{o_k},\hat{x}_i)$$
+$$r_i = 4 \sum_k B\left(\hat{x}_i,\hat{x}_{o_k}\right)\cdot B\left(\hat{x}_{o_k},\hat{x}_i\right)$$
 
 where the sum is taken over all matches that $P_i$ participated in, and $P_{o_k}$ is the opponent $P_i$ faced in match $M_k$.
 
