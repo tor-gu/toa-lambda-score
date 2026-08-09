@@ -69,7 +69,7 @@ Run the scoring locally on a payload file:
 ```
 
 ## Mathematical details
-Players $P_1, P_2, ...$ have participated in a tournament with a series of head-to-head matchups, $M_1, M_2, ...$. We are given the results of the matches, and want to estimate "scores" $x_1, x_2, ...$ that best explain the results of the tournament (and could be used to predict the results of additional matches).
+Players $P_1, P_2, \ldots$ have participated in a tournament with a series of head-to-head matchups, $M_1, M_2, \ldots$ . We are given the results of the matches, and want to estimate "scores" $x_1, x_2, ...$ that best explain the results of the tournament (and could be used to predict the results of additional matches).
 
 The underlying assumptions are:
 
