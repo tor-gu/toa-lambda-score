@@ -160,7 +160,7 @@ def fit_of(
     Maximize the objective function.
 
     We add a constraint to force the scores to sum to 0. The true
-    maximum will have this feature automatically. 
+    maximum will have this feature automatically.
 
     We negate the function and use minimize.
     """
