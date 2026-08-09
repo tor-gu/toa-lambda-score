@@ -99,7 +99,7 @@ def set_up_params(
     # Get games per matchup
     low_ids, hi_ids, pair_games = _games_by_matchup(player_count, winners, losers)
 
-    # Now convert back to dicts. We use int() so callers see plain Python 
+    # Now convert back to dicts. We use int() so callers see plain Python
     # ints rather than numpy scalars.
     wins_by_player = {int(i): int(v) for i, v in enumerate(wins) if v != 0}
     games_by_matchup = {

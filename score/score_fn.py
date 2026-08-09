@@ -38,6 +38,7 @@ def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
         }
     )
     scores_df = calculate_robustness(fit_df, scores_df, lmda=scale)
+    scores_df[FIT_COLUMN.ROBUSTNESS] = scores_df[FIT_COLUMN.ROBUSTNESS].round(3)
 
     return scores_df[[COLUMN.ID, FIT_COLUMN.SCORE, FIT_COLUMN.ROBUSTNESS]].to_dict(
         orient="records"
