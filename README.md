@@ -75,7 +75,7 @@ The underlying assumptions are:
 
 1. Scores are distributed normally about $0$:
 
-      $$f(\mathbf{x};\sigma)=C \cdot exp(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}})$$
+      $$f(\mathbf{x};\sigma)=C \cdot exp \left(- { \frac{ \sum_{i=1}^n x_i^2}{2\sigma^2}} \right)$$
 
     This is the prior distribution in the MAP estimate.
 
@@ -113,7 +113,7 @@ $\sigma$ is the standard deviation of the normal distribution, our prior distrib
 
 $\lambda$ is the scaling parameter for the Bradley-Terry model. This is computed from $p$, the _unit win probability_. Given a match between two players whose score differ by exactly 1, we require the chance that the stronger player wins is $p$. We can compute $\lambda$ from $p$ by
 
-$$\lambda = \log(\frac{p}{1-p})$$
+$$\lambda = \log \left(\frac{p}{1-p}\right)$$
 
 ### Robustness
 We also compute the _robustness_ of each player's score $\hat{x}_i$:
