@@ -9,6 +9,11 @@ The scoring system uses [MAP estimation](https://en.wikipedia.org/wiki/Maximum_a
 {
   "sd": 1.225,
   "unit_win_prob": 0.9,
+  "initial_strengths": [
+    {"id": "a", "score": 0.478},
+    {"id": "b", "score": -0.231}
+    // ... more strengths
+  ],
   "results": [
     {"winner": "a", "loser": "b", "match_id": "1"},
     {"winner": "b", "loser": "c", "match_id": "2"},
@@ -21,8 +26,12 @@ The scoring system uses [MAP estimation](https://en.wikipedia.org/wiki/Maximum_a
 | Field | Notes |
 |---|---|
 | `results` | required, non-empty array of dicts with `winner`, `loser`, and `match_id` ids. |
+| `initial_strengths` | optional array of dicts with `id` and a finite `score`. Initial value for the fit. |
 | `sd` | optional, overrides the `SD` env var. A number > 0.  |
 | `unit_win_prob` | optional, overrides the `UNIT_WIN_PROB` env var. A number strictly between 0.5 and 1 |
+
+`initial_strengths` takes the same shape the response returns, so an earlier scoring run can be fed straight back in as an intial value. Ids not listed start at `0`, and ids that appear in no result are ignored. If duplicate ids are
+supplied, an error will be raised. 
 
 See [parameters](#parameters) for the meaning of `sd` and `unit_win_prob`.
 

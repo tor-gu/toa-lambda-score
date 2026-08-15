@@ -2,9 +2,10 @@ import json
 import math
 from collections.abc import Mapping
 
-from score.consts import RESULT_COLUMN
+from score.consts import COLUMN, FIT_COLUMN, RESULT_COLUMN
 
 RESULTS_FIELD = "results"
+INITIAL_STRENGTHS_FIELD = "initial_strengths"
 SD_FIELD = "sd"
 UNIT_WIN_PROB_FIELD = "unit_win_prob"
 
@@ -76,6 +77,65 @@ def get_results(body: dict) -> list:
     return results
 
 
+def get_initial_strengths(body: dict) -> dict:
+    """Extract the optional 'initial_strengths' part of the body, as a dict of
+    id -> strength. It should look like this:
+    ```
+    {
+        // other fields
+        "initial_strengths": [
+            {"id": "aaa", "score": 0.484},
+            // ...
+        ]
+    }
+    ```
+    Any malformed row will raise an error. 
+    
+    Two rows with the same `id` will raise an error.
+
+    Extra fields in the rows are tolerated. 
+    """
+    strengths = body.get(INITIAL_STRENGTHS_FIELD)
+    if strengths is None:
+        return {}
+    if not isinstance(strengths, list):
+        raise InvalidPayload(f"'{INITIAL_STRENGTHS_FIELD}' must be an array")
+
+    seeds: dict = {}
+    for i, row in enumerate(strengths):
+        if not isinstance(row, dict):
+            raise InvalidPayload(f"{INITIAL_STRENGTHS_FIELD}[{i}] must be an object")
+        album_id = row.get(COLUMN.ID)
+        if album_id is None:
+            raise InvalidPayload(
+                f"{INITIAL_STRENGTHS_FIELD}[{i}] is missing '{COLUMN.ID}'"
+            )
+        if album_id in seeds:
+            raise InvalidPayload(
+                f"{INITIAL_STRENGTHS_FIELD}[{i}] has a duplicate id {album_id!r}"
+            )
+        if FIT_COLUMN.SCORE not in row:
+            raise InvalidPayload(
+                f"{INITIAL_STRENGTHS_FIELD}[{i}] is missing '{FIT_COLUMN.SCORE}'"
+            )
+        seeds[album_id] = _finite_float(
+            row[FIT_COLUMN.SCORE],
+            f"{INITIAL_STRENGTHS_FIELD}[{i}].{FIT_COLUMN.SCORE}",
+        )
+    return seeds
+
+
+def _finite_float(raw, source: str) -> float:
+    """Coerce `raw` to a finite float, blaming `source` if it isn't one."""
+    try:
+        value = float(raw)
+    except (TypeError, ValueError) as e:
+        raise InvalidPayload(f"{source} must be a number, got {raw!r}") from e
+    if not math.isfinite(value):
+        raise InvalidPayload(f"{source} must be finite, got {value}")
+    return value
+
+
 def _get_number(body: dict, field: str, env_var: str, env: Mapping[str, str]) -> float:
     """Get a number from the body, falling back to `env` if not present."""
     if field in body:
@@ -87,13 +147,7 @@ def _get_number(body: dict, field: str, env_var: str, env: Mapping[str, str]) ->
                 f"missing required parameter '{field}' "
                 f"(payload field or {env_var} env var)"
             )
-    try:
-        value = float(raw)
-    except (TypeError, ValueError) as e:
-        raise InvalidPayload(f"{source} must be a number, got {raw!r}") from e
-    if not math.isfinite(value):
-        raise InvalidPayload(f"{source} must be finite, got {value}")
-    return value
+    return _finite_float(raw, source)
 
 
 def get_params(body: dict, env: Mapping[str, str]) -> tuple[float, float]:

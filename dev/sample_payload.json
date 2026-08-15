@@ -5,5 +5,6 @@
     {"winner": "a", "loser": "b", "match_id": "1"},
     {"winner": "b", "loser": "c", "match_id": "2"},
     {"winner": "a", "loser": "c", "match_id": "3"}
-  ]
+  ],
+  "initial_scores": [{"id": "a", "score": 0.386}]
 }

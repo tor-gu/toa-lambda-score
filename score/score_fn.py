@@ -8,9 +8,15 @@ from .fit import fit_of, make_of
 from .robustness import calculate_robustness
 
 
-def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
+def score(
+    results: list[dict],
+    sd: float,
+    unit_win_prob: float,
+    initial_strengths: dict[str, float] | None = None,
+) -> list[dict]:
     """
     results: list of {"winner": str, "loser": str, "match_id": str}
+    initial_strengths: a dictionary (id --> strength) of initial values.
     returns: list of {"id": str, "score": float, "robustness": float}
     """
     # Store the results in a dataframe
@@ -39,8 +45,14 @@ def score(results: list[dict], sd: float, unit_win_prob: float) -> list[dict]:
     n = len(player_ids)
     of = make_of(n, fit_df, sd=sd, scale=scale)
 
+    # Initialize the initial value
+    if initial_strengths:
+        x0 = np.array([initial_strengths.get(player, 0.0) for player in players])
+    else:
+        x0 = np.zeros(n)
+
     # Calculate the fit -- this is where the action happens.
-    res = fit_of(of, np.zeros(n))
+    res = fit_of(of, x0)
 
     # Generate the scores dataframe from the results
     id_by_idx = {v: k for k, v in player_ids.items()}

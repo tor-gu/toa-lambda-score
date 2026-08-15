@@ -1,3 +1,5 @@
+import pytest
+
 from score.score_fn import score
 
 RESULTS = [
@@ -8,6 +10,7 @@ RESULTS = [
 ]
 SD = 0.622
 UWP = 0.9
+GOLDEN = {"a": 0.484, "b": -0.089, "c": -0.395}
 
 
 def test_returns_one_record_per_album():
@@ -50,7 +53,7 @@ def test_scores_are_stable():
     """Golden values, so a change to the fit has something to fail against."""
     result = score(RESULTS, SD, UWP)
     actual = {r["id"]: round(r["score"], 3) for r in result}
-    assert actual == {"a": 0.484, "b": -0.089, "c": -0.395}
+    assert actual == GOLDEN
 
 
 def test_robustness_is_stable():
@@ -58,3 +61,48 @@ def test_robustness_is_stable():
     result = score(RESULTS, SD, UWP)
     actual = {r["id"]: r["robustness"] for r in result}
     assert actual == {"a": 1.82, "b": 2.273, "c": 1.337}
+
+
+# ── initial strengths ─────────────────────────────────────────────────────────
+
+
+def scores_by_id(initial_strengths):
+    return {r["id"]: r["score"] for r in score(RESULTS, SD, UWP, initial_strengths)}
+
+
+def assert_golden(initial_strengths):
+    """The seed is a warm start: it must not move where the fit lands.
+
+    Compared with a tolerance rather than exactly, because a different start
+    can shift the last rounded digit.
+    """
+    assert scores_by_id(initial_strengths) == pytest.approx(GOLDEN, abs=1e-3)
+
+
+@pytest.mark.parametrize("seed", [None, {}], ids=["none", "empty"])
+def test_no_seed_matches_the_golden_scores(seed):
+    assert_golden(seed)
+
+
+def test_seeding_with_the_answer_reproduces_it():
+    assert_golden(dict(GOLDEN))
+
+
+def test_a_bad_seed_still_converges():
+    """Reversed order, and far from the optimum."""
+    assert_golden({"a": -5.0, "b": 0.0, "c": 5.0})
+
+
+def test_a_partial_seed_converges():
+    """Only "a" is listed, so "b" and "c" start at 0."""
+    assert_golden({"a": 0.484})
+
+
+def test_extraneous_ids_are_ignored():
+    """Albums that played no matches have no index in the fit."""
+    assert_golden({**GOLDEN, "zzz": 5.0, "yyy": -5.0})
+
+
+def test_seed_does_not_add_records():
+    result = score(RESULTS, SD, UWP, {"zzz": 5.0})
+    assert {r["id"] for r in result} == {"a", "b", "c"}

@@ -13,7 +13,13 @@ import os
 import sys
 from pathlib import Path
 
-from payload import InvalidPayload, get_params, get_results, parse_body
+from payload import (
+    InvalidPayload,
+    get_initial_strengths,
+    get_params,
+    get_results,
+    parse_body,
+)
 from score.score_fn import score
 
 
@@ -31,12 +37,14 @@ def main(path: Path):
     try:
         body = parse_body(raw)
         results = get_results(body)
+        initial_strengths = get_initial_strengths(body)
         sd, unit_win_prob = get_params(body, os.environ)
     except InvalidPayload as e:
         # The deployed handler answers these with a 400.
         die(str(e))
 
-    print(json.dumps({"scores": score(results, sd, unit_win_prob)}, indent=2))
+    scores = score(results, sd, unit_win_prob, initial_strengths)
+    print(json.dumps({"scores": scores}, indent=2))
 
 
 if __name__ == "__main__":

@@ -2,7 +2,13 @@ import json
 
 import pytest
 
-from payload import InvalidPayload, get_params, get_results, parse_body
+from payload import (
+    InvalidPayload,
+    get_initial_strengths,
+    get_params,
+    get_results,
+    parse_body,
+)
 
 MATCH = {"winner": "a", "loser": "b", "match_id": "1"}
 VALID = {"results": [MATCH], "sd": 1.5, "unit_win_prob": 0.9}
@@ -94,6 +100,90 @@ def test_self_match_is_rejected():
 def test_message_names_the_offending_index():
     results = [MATCH, MATCH, {"winner": "c", "match_id": "3"}]
     assert "results[2]" in rejection(get_results, {"results": results})
+
+
+# ── get_initial_strengths ─────────────────────────────────────────────────────
+
+
+def strengths(*rows):
+    """A body carrying just the initial_strengths field."""
+    return {**VALID, "initial_strengths": list(rows)}
+
+
+def test_absent_initial_strengths_is_empty():
+    assert get_initial_strengths(VALID) == {}
+
+
+def test_null_initial_strengths_is_empty():
+    assert get_initial_strengths({**VALID, "initial_strengths": None}) == {}
+
+
+def test_empty_initial_strengths_is_empty():
+    """Unlike 'results', an empty list is fine -- it just means no seed."""
+    assert get_initial_strengths(strengths()) == {}
+
+
+def test_valid_initial_strengths_pass_through():
+    body = strengths({"id": "a", "score": 0.1}, {"id": "b", "score": -0.2})
+    assert get_initial_strengths(body) == {"a": 0.1, "b": -0.2}
+
+
+def test_initial_strength_scores_are_floats():
+    body = strengths({"id": "a", "score": 1}, {"id": "b", "score": "0.5"})
+    assert get_initial_strengths(body) == {"a": 1.0, "b": 0.5}
+
+
+def test_zero_initial_strength_is_kept():
+    """`or`-style truthiness would have dropped this one."""
+    assert get_initial_strengths(strengths({"id": "a", "score": 0})) == {"a": 0.0}
+
+
+def test_initial_strengths_not_a_list_is_rejected():
+    body = {**VALID, "initial_strengths": {"a": 0.1}}
+    assert "must be an array" in rejection(get_initial_strengths, body)
+
+
+def test_initial_strength_element_not_an_object_is_rejected():
+    assert "must be an object" in rejection(get_initial_strengths, strengths("a=0.1"))
+
+
+@pytest.mark.parametrize("field", ["id", "score"])
+def test_initial_strength_missing_field_is_rejected(field):
+    row = {k: v for k, v in {"id": "a", "score": 0.1}.items() if k != field}
+    assert f"missing '{field}'" in rejection(get_initial_strengths, strengths(row))
+
+
+def test_initial_strength_null_id_is_rejected():
+    row = {"id": None, "score": 0.1}
+    assert "missing 'id'" in rejection(get_initial_strengths, strengths(row))
+
+
+def test_initial_strength_null_score_is_rejected():
+    row = {"id": "a", "score": None}
+    assert "must be a number" in rejection(get_initial_strengths, strengths(row))
+
+
+def test_non_numeric_initial_strength_is_rejected():
+    row = {"id": "a", "score": "quite strong"}
+    assert "must be a number" in rejection(get_initial_strengths, strengths(row))
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_non_finite_initial_strength_is_rejected(value):
+    # A nan seed makes the whole fit come back nan, with a 200 attached.
+    row = {"id": "a", "score": value}
+    assert "must be finite" in rejection(get_initial_strengths, strengths(row))
+
+
+def test_duplicate_initial_strength_id_is_rejected():
+    """Two seeds for one album is ambiguous, so we refuse rather than guess."""
+    body = strengths({"id": "a", "score": 0.1}, {"id": "a", "score": 0.2})
+    assert "duplicate id 'a'" in rejection(get_initial_strengths, body)
+
+
+def test_initial_strengths_message_names_the_offending_index():
+    body = strengths({"id": "a", "score": 0.1}, {"id": "b"})
+    assert "initial_strengths[1]" in rejection(get_initial_strengths, body)
 
 
 # ── get_params ────────────────────────────────────────────────────────────────
