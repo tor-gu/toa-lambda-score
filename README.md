@@ -31,7 +31,7 @@ The scoring system uses [MAP estimation](https://en.wikipedia.org/wiki/Maximum_a
 | `unit_win_prob` | optional, overrides the `UNIT_WIN_PROB` env var. A number strictly between 0.5 and 1 |
 
 `initial_strengths` takes the same shape the response returns, so an earlier scoring run can be fed straight back in as an intial value. Ids not listed start at `0`, and ids that appear in no result are ignored. If duplicate ids are
-supplied, an error will be raised. 
+supplied, an error will be raised. The strengths will be recentered to `0` automatically.
 
 See [parameters](#parameters) for the meaning of `sd` and `unit_win_prob`.
 
@@ -145,7 +145,6 @@ The actual maximum of the objective function will satisfy
 $$\sum_{i=1}^n x_i = 0$$
 
 However, the estimate of the maximum returned by the numerical package is not guaranteed to satisfy it, so we add it as a [constraint](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.LinearConstraint.html#scipy.optimize.LinearConstraint).
-
 
 ## Related projects
 

@@ -1,5 +1,7 @@
+import numpy as np
 import pytest
 
+from score import score_fn
 from score.score_fn import score
 
 RESULTS = [
@@ -106,3 +108,54 @@ def test_extraneous_ids_are_ignored():
 def test_seed_does_not_add_records():
     result = score(RESULTS, SD, UWP, {"zzz": 5.0})
     assert {r["id"] for r in result} == {"a", "b", "c"}
+
+
+# ── the starting point handed to the optimizer ────────────────────────────────
+
+
+@pytest.fixture
+def captured_x0(monkeypatch):
+    """The starting vector score() hands fit_of, captured in place."""
+    captured = {}
+    real_fit_of = score_fn.fit_of
+
+    def spy(of, initial_strengths, *args, **kwargs):
+        captured["x0"] = np.asarray(initial_strengths, dtype=float).copy()
+        return real_fit_of(of, initial_strengths, *args, **kwargs)
+
+    monkeypatch.setattr(score_fn, "fit_of", spy)
+    return captured
+
+
+@pytest.mark.parametrize(
+    "seed",
+    [
+        None,
+        {},
+        GOLDEN,
+        {"a": 1.0, "b": 1.0, "c": 1.0},
+        {"a": 0.484},
+        {"a": 0.484, "b": -0.088, "c": -0.395},  # rounding residual: sums to +0.001
+    ],
+    ids=["none", "empty", "golden", "all-ones", "partial", "rounded"],
+)
+def test_starting_point_always_satisfies_the_sum_constraint(captured_x0, seed):
+    """fit_of constrains the scores to sum to 0, and SLSQP handles an infeasible
+    start badly, so this is an important test
+    """
+    score(RESULTS, SD, UWP, seed)
+    assert captured_x0["x0"].sum() == pytest.approx(0.0, abs=1e-12)
+
+
+def test_recentering_preserves_the_gaps_between_seeds(captured_x0):
+    """Re-centering shifts the whole vector, so it keeps the seed's shape."""
+    score(RESULTS, SD, UWP, {"a": 1.5, "b": 1.0, "c": 0.8})
+    x0 = captured_x0["x0"]
+    # players are sorted by id, so x0 is [a, b, c]
+    assert x0[0] - x0[1] == pytest.approx(0.5)
+    assert x0[1] - x0[2] == pytest.approx(0.2)
+
+
+def test_unseeded_start_is_still_all_zeros(captured_x0):
+    score(RESULTS, SD, UWP)
+    assert captured_x0["x0"].tolist() == [0.0, 0.0, 0.0]

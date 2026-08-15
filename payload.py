@@ -89,11 +89,11 @@ def get_initial_strengths(body: dict) -> dict:
         ]
     }
     ```
-    Any malformed row will raise an error. 
-    
+    Any malformed row will raise an error.
+
     Two rows with the same `id` will raise an error.
 
-    Extra fields in the rows are tolerated. 
+    Extra fields in the rows are tolerated.
     """
     strengths = body.get(INITIAL_STRENGTHS_FIELD)
     if strengths is None:

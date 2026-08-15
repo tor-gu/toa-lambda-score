@@ -45,9 +45,9 @@ def score(
     n = len(player_ids)
     of = make_of(n, fit_df, sd=sd, scale=scale)
 
-    # Initialize the initial value
     if initial_strengths:
         x0 = np.array([initial_strengths.get(player, 0.0) for player in players])
+        x0 -= x0.mean() # Recenter to 0
     else:
         x0 = np.zeros(n)
 
